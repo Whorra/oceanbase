@@ -544,10 +544,12 @@ void ObMultipleMerge::reuse_iter_array()
   ObStoreRowIterator* iter = NULL;
   for (int64_t i = 0; i < iters_.count(); ++i) {
     if (NULL != (iter = iters_.at(i))) {
-      iter->~ObStoreRowIterator();
+      // (shk):
+      iter->reuse();
+      // iter->~ObStoreRowIterator();
     }
   }
-  iters_.reuse();
+  // iters_.reuse();
 }
 
 int ObMultipleMerge::open()

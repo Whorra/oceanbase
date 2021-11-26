@@ -643,9 +643,32 @@ void ObSSTableRowIterator::reset()
 void ObSSTableRowIterator::reuse()
 {
   ObISSTableRowIterator::reuse();
+  // (shk):
+  // read_handles_.reuse();
+  micro_handles_.reuse();
+  // sstable_micro_infos_.reuse();
+  // TODO:
+  // if (NULL != micro_exister_) {
+  //   micro_exister_->~ObMicroBlockRowExister();
+  //   micro_exister_ = NULL;
+  // }
+  // if (NULL != micro_getter_) {
+  //   micro_getter_->~ObMicroBlockRowGetter();
+  //   micro_getter_ = NULL;
+  // }
   if (NULL != micro_scanner_) {
     micro_scanner_->rescan();
   }
+  // if (NULL != micro_lock_checker_) {
+  //   micro_lock_checker_->~ObMicroBlockRowLockChecker();
+  //   micro_lock_checker_ = NULL;
+  // }
+
+  // iter_param_ = NULL; //
+  // access_ctx_ = NULL; //
+  // sstable_ = NULL;    //
+  // is_base_ = false;    //
+  // table_type_ = ObITable::MAJOR_SSTABLE; //
 
   macro_block_iter_.reset();
   query_range_ = NULL;

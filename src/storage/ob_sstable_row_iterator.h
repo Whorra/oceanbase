@@ -100,6 +100,13 @@ struct ObSSTableMicroBlockInfo {
   ObSSTableMicroBlockInfo() : macro_ctx_(), micro_info_(), micro_idx_(-1), is_skip_(false)
   {}
   TO_STRING_KV(K_(macro_ctx), K_(micro_info), K_(micro_idx), K_(is_skip));
+  // (shk):
+  void reset() {
+    macro_ctx_.reset();
+    micro_info_.reset();
+    micro_idx_ = -1;
+    is_skip_ = false;
+  }
   blocksstable::ObMacroBlockCtx macro_ctx_;
   blocksstable::ObMicroBlockInfo micro_info_;
   int64_t micro_idx_;
@@ -249,6 +256,13 @@ public:
     }
     array_ = nullptr;
     capacity_ = 0;
+  }
+  // (shk):
+  inline void reuse()
+  {
+    for (int64_t i = 0; i < capacity_; ++i) {
+      array_[i].reset();
+    }
   }
   int reserve(common::ObArenaAllocator& allocator, const int64_t count)
   {
