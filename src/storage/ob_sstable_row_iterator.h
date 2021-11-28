@@ -260,7 +260,20 @@ public:
         ret = common::OB_ALLOCATE_MEMORY_FAILED;
         STORAGE_LOG(WARN, "failed to allocate array", K(ret));
       } else {
-        array_ = new (buf) T[count];
+        // (shk):
+        array_ = new (buf)T();
+        // // binary:
+        for (int i = 0; (1 << i) < count; ++i) {
+          memcpy((char*)(((T*)buf) + (1 << i)), (char*)buf,
+                (count < (1 << (i + 1))) ? (count - (1 << i)) * sizeof(T) : 
+                                           (1 << i) * sizeof(T));
+        }
+        // // simple for:
+        // for (int i = 1; i < count; ++i) {
+        //   memcpy((char*)(((T*)buf) + i), (char*)buf, sizeof(T));
+        // }
+        // array_ = new (buf) T[count];
+
         capacity_ = count;
       }
     }
@@ -312,6 +325,11 @@ struct ObFastSkipChecker {
 };
 
 class ObSSTableRowIterator : public ObISSTableRowIterator {
+  // (shk):
+  // typedef common::ObSEArray<ObSSTableReadHandle, 16> ReadHandleSeArray;
+  // typedef common::ObSEArray<ObMicroBlockDataHandle, 16> BlockDataHandleSeArray;
+  // typedef common::ObSEArray<ObSSTableMicroBlockInfo, 16> MicroInfoSeArray;
+
   typedef ObSimpleArray<ObSSTableReadHandle> ReadHandleArray;
   typedef ObSimpleArray<ObMicroBlockDataHandle> BlockDataHandleArray;
   typedef ObSimpleArray<ObSSTableMicroBlockInfo> MicroInfoArray;
@@ -321,6 +339,7 @@ public:
   virtual ~ObSSTableRowIterator();
   virtual void reset() override;
   virtual void reuse() override;
+  // virtual void my_reuse() override;
   virtual int get_skip_range_ctx(
       ObSSTableReadHandle& read_handle, const int64_t cur_micro_idx, ObSSTableSkipRangeCtx*& skip_ctx);
   int get_row_iter_flag_impl(uint8_t& flag);
