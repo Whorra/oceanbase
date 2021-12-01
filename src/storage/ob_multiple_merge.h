@@ -35,6 +35,7 @@ public:
   virtual int get_next_row(ObStoreRow*& row) override;
   virtual void reset() override;
   virtual void reuse();
+  virtual void my_reuse();
   inline const ObRowStat& get_row_stat() const
   {
     return row_stat_;
@@ -66,6 +67,7 @@ public:
 
 protected:
   int open();
+  int my_open();
   virtual int calc_scan_range() = 0;
   virtual int construct_iters() = 0;
   virtual int is_range_valid() const = 0;

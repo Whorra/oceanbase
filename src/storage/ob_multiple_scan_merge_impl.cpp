@@ -37,29 +37,16 @@ void ObMultipleScanMergeImpl::reset()
 
 void ObMultipleScanMergeImpl::reuse()
 {
-  // (shk):
   ObMultipleMerge::reuse();
-  // reuse_iter_array();
-  // ObStoreRowIterator* iter = NULL;
-  // for (int64_t i = 0; i < ObMultipleMerge::iters_.count(); ++i) {
-  //   if (NULL != (iter = ObMultipleMerge::iters_.at(i))) {
-  //     // if (iter->get_my_type() == 12345) {
-  //     //   // LOG_INFO("my reuse");
-  //     //   iter->reuse();
-  //     // } else {
-  //     //   LOG_INFO("other no reuse");
-  //       iter->~ObStoreRowIterator();
-  //     // }
-  //   }
-  // }
-  // ObMultipleMerge::iters_.reuse();
-  // ObMultipleMerge::row_stat_.reset();
-  // ObMultipleMerge::table_stat_.reuse();
-  // ObMultipleMerge::range_idx_delta_ = 0;
-  // ObMultipleMerge::unprojected_row_.flag_ = -1;
-  // ObMultipleMerge::next_row_ = nullptr;
-  // ObMultipleMerge::skip_refresh_table_ = false;
-  // ObMultipleMerge::read_memtable_only_ = false;
+  loser_tree_.reset();
+  iter_del_row_ = false;
+  consumer_.reset();
+  try_push_top_item_ = false;
+}
+
+void ObMultipleScanMergeImpl::my_reuse()
+{
+  ObMultipleMerge::my_reuse();
   loser_tree_.reset();
   iter_del_row_ = false;
   consumer_.reset();

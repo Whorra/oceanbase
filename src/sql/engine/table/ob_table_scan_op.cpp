@@ -1118,18 +1118,22 @@ int ObTableScanOp::add_query_range()
 int ObTableScanOp::rescan_after_adding_query_range()
 {
   int ret = OB_SUCCESS;
+  ObTableScanIterator* tmp_res = static_cast<ObTableScanIterator*>(result_);
+  tmp_res->do_my_rescan_ = true;
   if (OB_FAIL(ObOperator::rescan())) {
     LOG_WARN("rescan operator failed", K(ret));
-  } else if (OB_ISNULL(result_)) {
+  } else if (OB_ISNULL(tmp_res)) {
     ret = OB_ERR_UNEXPECTED;
     LOG_ERROR("result_ is NULL", K(ret));
   } else if (MY_SPEC.is_vt_mapping_ && OB_FAIL(vt_result_converter_->convert_key_ranges(scan_param_.key_ranges_))) {
     LOG_WARN("failed to convert key ranges", K(ret));
-  } else if (OB_FAIL(static_cast<ObTableScanIterator*>(result_)->rescan(scan_param_))) {
+  // } else if (!(tmp_res->do_my_rescan_ = true)) {
+  } else if (OB_FAIL(tmp_res->rescan(scan_param_))) {
     LOG_WARN("failed to rescan", K(ret), K(scan_param_));
   } else {
     iter_end_ = false;
   }
+  tmp_res->do_my_rescan_ = false;
   return ret;
 }
 

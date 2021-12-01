@@ -21,6 +21,7 @@ public:
   ObMultipleScanMerge();
   virtual ~ObMultipleScanMerge();
 
+  bool do_my_reuse_for_open_iter_ = false;
 public:
   static int estimate_row_count(const common::ObQueryFlag query_flag, const uint64_t table_id,
       const common::ObExtStoreRange& range, const common::ObIArray<ObITable*>& tables, ObPartitionEst& cost_estimate,
@@ -28,6 +29,7 @@ public:
   int open(const common::ObExtStoreRange& range);
   virtual void reset() override;
   virtual void reuse() override;
+  virtual void my_reuse() override;
   inline void set_iter_del_row(const bool iter_del_row)
   {
     iter_del_row_ = iter_del_row;

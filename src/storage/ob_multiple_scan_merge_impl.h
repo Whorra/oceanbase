@@ -97,6 +97,7 @@ public:
   virtual int inner_get_next_row(ObStoreRow& row) override;
   virtual void reset() override;
   virtual void reuse() override;
+  virtual void my_reuse() override;
   inline bool is_scan_end() const
   {
     return loser_tree_.empty();

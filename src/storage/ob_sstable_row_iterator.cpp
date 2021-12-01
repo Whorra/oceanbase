@@ -469,13 +469,13 @@ int ObSSTableRowIterator::inner_open(
     STORAGE_LOG(WARN, "Unexpected error, ", K(ret), K_(read_handle_cnt), K_(micro_handle_cnt));
   } else if (OB_FAIL(init_handle_mgr(iter_param, access_ctx, query_range))) {
     STORAGE_LOG(WARN, "fail to init handle mgr", K(ret), K(iter_param), K(access_ctx));
-  } else if (OB_FAIL(read_handles_.reserve(*access_ctx.allocator_, read_handle_cnt_))) {
+  } else if (OB_FAIL(read_handles_.reserve(*access_ctx.stmt_allocator_, read_handle_cnt_))) {
     STORAGE_LOG(WARN, "failed to reserve read handles", K(ret), K_(read_handle_cnt));
-  } else if (OB_FAIL(micro_handles_.reserve(*access_ctx.allocator_, micro_handle_cnt_))) {
+  } else if (OB_FAIL(micro_handles_.reserve(*access_ctx.stmt_allocator_, micro_handle_cnt_))) {
     STORAGE_LOG(WARN, "failed to reserve micro handles", K(ret), K_(micro_handle_cnt));
-  } else if (OB_FAIL(sstable_micro_infos_.reserve(*access_ctx.allocator_, micro_handle_cnt_))) {
+  } else if (OB_FAIL(sstable_micro_infos_.reserve(*access_ctx.stmt_allocator_, micro_handle_cnt_))) {
     STORAGE_LOG(WARN, "failed to reserve sstable micro infos", K(ret), K_(micro_handle_cnt));
-  } else if (OB_FAIL(sorted_sstable_micro_infos_.reserve(*access_ctx.allocator_, micro_handle_cnt_))) {
+  } else if (OB_FAIL(sorted_sstable_micro_infos_.reserve(*access_ctx.stmt_allocator_, micro_handle_cnt_))) {
     STORAGE_LOG(WARN, "failed to reserve sorted sstable micro infos", K(ret), K_(micro_handle_cnt));
   } else {
     sstable_ = static_cast<ObSSTable*>(table);
@@ -643,8 +643,18 @@ void ObSSTableRowIterator::reset()
 void ObSSTableRowIterator::reuse()
 {
   ObISSTableRowIterator::reuse();
+  // (shk):
+  // read_handles_.reset();
+  // micro_handles_.reset();
+  // sstable_micro_infos_.reset();
+
+  // if (NULL != micro_scanner_) {
+  //   micro_scanner_->rescan();
+  // }
+
   if (NULL != micro_scanner_) {
-    micro_scanner_->rescan();
+    micro_scanner_->~ObIMicroBlockRowScanner();
+    micro_scanner_ = NULL;
   }
 
   macro_block_iter_.reset();

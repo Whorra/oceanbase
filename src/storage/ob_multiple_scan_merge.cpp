@@ -30,7 +30,7 @@ int ObMultipleScanMerge::open(const ObExtStoreRange& range)
 
   if (OB_UNLIKELY(!range.get_range().is_valid())) {
     STORAGE_LOG(WARN, "Invalid range, ", K(range), K(ret));
-  } else if (OB_FAIL(ObMultipleMerge::open())) {
+  } else if (OB_FAIL(do_my_reuse_for_open_iter_ ? ObMultipleMerge::my_open() : ObMultipleMerge::open())) {
     STORAGE_LOG(WARN, "Fail to open ObMultipleMerge, ", K(ret));
   } else if (OB_FAIL(const_cast<ObExtStoreRange&>(range).to_collation_free_range_on_demand_and_cutoff_range(
                  *access_ctx_->allocator_))) {
@@ -51,7 +51,7 @@ int ObMultipleScanMerge::open(const ObExtStoreRange& range)
       access_ctx_->store_ctx_->warm_up_ctx_->record_scan(*access_param_, *access_ctx_, *range_);
     }
   }
-
+  do_my_reuse_for_open_iter_ = false;
   return ret;
 }
 
@@ -104,6 +104,9 @@ void ObMultipleScanMerge::collect_merge_stat(ObTableStoreStat& stat) const
 
 int ObMultipleScanMerge::construct_iters()
 {
+// #define USING_LOG_PREFIX COMMON
+  // LOG_INFO("[my_debug] ObMultipleScanMerge::construct_iters run!", K(iters_.count()));
+  
   int ret = OB_SUCCESS;
   const ObIArray<ObITable*>& tables = tables_handle_.get_tables();
 
@@ -128,6 +131,10 @@ int ObMultipleScanMerge::construct_iters()
     const ObTableIterParam* iter_pram = NULL;
     const bool use_cache_iter = iters_.count() > 0;
     const int64_t table_cnt = tables.count() - 1;
+
+    // if (use_cache_iter) {
+    //   LOG_INFO("[my_debug] ObMultipleScanMerge::construct_iters use cache!");
+    // }
 
     if (OB_FAIL(loser_tree_.init(tables.count(), *access_ctx_->stmt_allocator_))) {
       STORAGE_LOG(WARN, "init loser tree fail", K(ret));
@@ -182,6 +189,11 @@ void ObMultipleScanMerge::reset()
 void ObMultipleScanMerge::reuse()
 {
   return ObMultipleScanMergeImpl::reuse();
+}
+
+void ObMultipleScanMerge::my_reuse()
+{
+  return ObMultipleScanMergeImpl::my_reuse();
 }
 
 int ObMultipleScanMerge::inner_get_next_row(ObStoreRow& row)

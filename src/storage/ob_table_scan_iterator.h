@@ -48,6 +48,8 @@ public:
   int rescan(const ObRangeArray& key_ranges, const ObPosArray& range_array_pos);
   int switch_iterator(const int64_t range_array_idx);
   int release_table_ref();
+  
+  bool do_my_rescan_ = false;
 private:
   static const int64_t LOOP_RESCAN_BUFFER_SIZE = 8 * 1024;  // 8K
   int prepare_table_param();
@@ -113,7 +115,7 @@ class ObTableScanIterIterator : public common::ObNewIterIterator {
 public:
   static constexpr int64_t RP_MAX_FREE_LIST_NUM = 1024;
   static constexpr const char LABEL[] = "RPTblScanIterIter";
-
+  bool do_my_rescan_ = false;
 public:
   ObTableScanIterIterator();
   virtual ~ObTableScanIterIterator();
@@ -138,7 +140,7 @@ class ObTableScanIterator : public common::ObNewRowIterator {
 public:
   static constexpr int64_t RP_MAX_FREE_LIST_NUM = 1024;
   static constexpr const char LABEL[] = "RPTableScanIter";
-
+  bool do_my_rescan_ = false;
 public:
   ObTableScanIterator();
   virtual ~ObTableScanIterator();

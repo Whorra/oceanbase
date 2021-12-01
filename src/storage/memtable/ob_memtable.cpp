@@ -926,6 +926,7 @@ int ObMemtable::get(const storage::ObTableIterParam& param, storage::ObTableAcce
     ColumnMap* local_map = NULL;
     const ColumnMap* param_column_map = nullptr;
     if (nullptr == row.row_val_.cells_) {
+      // (Maybe) Obj is not necessary.
       if (nullptr ==
           (row.row_val_.cells_ = static_cast<ObObj*>(context.allocator_->alloc(sizeof(ObObj) * out_cols->count())))) {
         ret = OB_ALLOCATE_MEMORY_FAILED;
@@ -1033,7 +1034,7 @@ int ObMemtable::get(const storage::ObTableIterParam& param, storage::ObTableAcce
     TRANS_LOG(WARN, "invalid argument, ", K(ret), K(param), K(context));
   } else if (OB_FAIL(context.store_ctx_->mem_ctx_->get_trans_status())) {
     TRANS_LOG(WARN, "trans already end", K(ret));
-  } else if (NULL == (get_iter_buffer = context.allocator_->alloc(sizeof(ObMemtableGetIterator))) ||
+  } else if (NULL == (get_iter_buffer = context.stmt_allocator_->alloc(sizeof(ObMemtableGetIterator))) ||
              NULL == (get_iter_ptr = new (get_iter_buffer) ObMemtableGetIterator())) {
     TRANS_LOG(WARN, "construct ObMemtableGetIterator fail");
     ret = OB_ALLOCATE_MEMORY_FAILED;
@@ -1082,7 +1083,7 @@ int ObMemtable::scan(const storage::ObTableIterParam& param, storage::ObTableAcc
   } else {
     if (param.is_multi_version_minor_merge_) {
       if (GCONF._enable_sparse_row) {
-        if (NULL == (scan_iter_buffer = context.allocator_->alloc(sizeof(ObMemtableMultiVersionScanSparseIterator))) ||
+        if (NULL == (scan_iter_buffer = context.stmt_allocator_->alloc(sizeof(ObMemtableMultiVersionScanSparseIterator))) ||
             NULL == (scan_iter_ptr = new (scan_iter_buffer) ObMemtableMultiVersionScanSparseIterator())) {
           TRANS_LOG(WARN,
               "construct ObMemtableMultiVersionScanSparseIterator fail",
@@ -1099,7 +1100,7 @@ int ObMemtable::scan(const storage::ObTableIterParam& param, storage::ObTableAcc
           TRANS_LOG(WARN, "scan iter init fail", "ret", ret, K(real_range), K(param), K(context));
         }
       } else {
-        if (NULL == (scan_iter_buffer = context.allocator_->alloc(sizeof(ObMemtableMultiVersionScanIterator))) ||
+        if (NULL == (scan_iter_buffer = context.stmt_allocator_->alloc(sizeof(ObMemtableMultiVersionScanIterator))) ||
             NULL == (scan_iter_ptr = new (scan_iter_buffer) ObMemtableMultiVersionScanIterator())) {
           TRANS_LOG(WARN,
               "construct ObMemtableScanIterator fail",
@@ -1117,7 +1118,7 @@ int ObMemtable::scan(const storage::ObTableIterParam& param, storage::ObTableAcc
         }
       }
     } else {
-      if (NULL == (scan_iter_buffer = context.allocator_->alloc(sizeof(ObMemtableScanIterator))) ||
+      if (NULL == (scan_iter_buffer = context.stmt_allocator_->alloc(sizeof(ObMemtableScanIterator))) ||
           NULL == (scan_iter_ptr = new (scan_iter_buffer) ObMemtableScanIterator())) {
         TRANS_LOG(WARN,
             "construct ObMemtableScanIterator fail",
@@ -1162,7 +1163,7 @@ int ObMemtable::multi_get(const storage::ObTableIterParam& param, storage::ObTab
     TRANS_LOG(WARN, "invalid argument, ", K(ret), K(param), K(context), K(rowkeys));
   } else if (OB_FAIL(context.store_ctx_->mem_ctx_->get_trans_status())) {
     TRANS_LOG(WARN, "trans already end", K(ret));
-  } else if (NULL == (mget_iter_buffer = context.allocator_->alloc(sizeof(ObMemtableMGetIterator))) ||
+  } else if (NULL == (mget_iter_buffer = context.stmt_allocator_->alloc(sizeof(ObMemtableMGetIterator))) ||
              NULL == (mget_iter_ptr = new (mget_iter_buffer) ObMemtableMGetIterator())) {
     TRANS_LOG(WARN,
         "construct ObMemtableMGetIterator fail",
@@ -1212,7 +1213,7 @@ int ObMemtable::multi_scan(const storage::ObTableIterParam& param, storage::ObTa
     TRANS_LOG(WARN, "invalid argument, ", K(ret), K(param), K(context), K(ranges));
   } else if (OB_FAIL(context.store_ctx_->mem_ctx_->get_trans_status())) {
     TRANS_LOG(WARN, "trans already end", K(ret));
-  } else if (NULL == (mscan_iter_buffer = context.allocator_->alloc(sizeof(ObMemtableMScanIterator))) ||
+  } else if (NULL == (mscan_iter_buffer = context.stmt_allocator_->alloc(sizeof(ObMemtableMScanIterator))) ||
              NULL == (mscan_iter_ptr = new (mscan_iter_buffer) ObMemtableMScanIterator())) {
     TRANS_LOG(WARN,
         "construct ObMemtableMScanIterator fail",

@@ -786,6 +786,7 @@ public:
 class ObStoreRowIterator : public ObIStoreRowIterator {
 public:
   ObStoreRowIterator() : type_(0)
+    // , my_iter_type_(0)
   {}
   virtual ~ObStoreRowIterator()
   {}
@@ -831,8 +832,13 @@ public:
   {
     return type_;
   }
+  // virtual int get_my_type() const
+  // {
+  //   return my_iter_type_;
+  // }
   virtual void reuse()
   {}
+  // virtual void my_reuse() {}
   virtual bool is_base_sstable_iter() const
   {
     return false;
@@ -855,6 +861,8 @@ public:
 
 protected:
   int type_;
+  // (shk):
+  // int my_iter_type_;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(ObStoreRowIterator);

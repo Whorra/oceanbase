@@ -541,13 +541,36 @@ void ObMultipleMerge::reuse()
 
 void ObMultipleMerge::reuse_iter_array()
 {
+  // LOG_INFO("[my_debug] ObMultipleMerge::reuse", K(iters_.count()));
   ObStoreRowIterator* iter = NULL;
   for (int64_t i = 0; i < iters_.count(); ++i) {
     if (NULL != (iter = iters_.at(i))) {
       iter->~ObStoreRowIterator();
+      // iter->reuse();
     }
   }
   iters_.reuse();
+}
+
+void ObMultipleMerge::my_reuse()
+{
+  // LOG_INFO("[my_debug] ObMultipleMerge::my_reuse", K(iters_.count()));
+
+  ObStoreRowIterator* iter = NULL;
+  for (int64_t i = 0; i < iters_.count(); ++i) {
+    if (NULL != (iter = iters_.at(i))) {
+      // iter->~ObStoreRowIterator();
+      iter->reuse();
+    }
+  }
+  // iters_.reuse();
+  row_stat_.reset();
+  table_stat_.reuse();
+  range_idx_delta_ = 0;
+  unprojected_row_.flag_ = -1;
+  next_row_ = nullptr;
+  skip_refresh_table_ = false;
+  read_memtable_only_ = false;
 }
 
 int ObMultipleMerge::open()
@@ -557,7 +580,31 @@ int ObMultipleMerge::open()
     ret = OB_NOT_INIT;
     STORAGE_LOG(WARN, "The ObMultipleMerge has not been inited, ", K(ret));
   } else {
+    // (shk): open 最终走了 reuse 逻辑
     ObMultipleMerge::reuse();
+    scan_cnt_ = 0;
+    filt_cnt_ = 0;
+    if (is_tables_reset_) {
+      if (OB_FAIL(prepare_read_tables())) {
+        STORAGE_LOG(WARN, "fail to prepare read tables", K(ret));
+      } else {
+        is_tables_reset_ = false;
+      }
+    }
+  }
+  return ret;
+}
+
+int ObMultipleMerge::my_open()
+{
+  int ret = OB_SUCCESS;
+  if (OB_UNLIKELY(!inited_)) {
+    ret = OB_NOT_INIT;
+    STORAGE_LOG(WARN, "The ObMultipleMerge has not been inited, ", K(ret));
+  } else {
+    // (shk): 调用 my_reuse()
+    // LOG_INFO("[my_debug] ObMultipleMerge::my_open");
+    ObMultipleMerge::my_reuse();
     scan_cnt_ = 0;
     filt_cnt_ = 0;
     if (is_tables_reset_) {

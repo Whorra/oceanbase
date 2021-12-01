@@ -1,3 +1,4 @@
+unittest/
 ###### lines below this line must be placed at the top of the file
 unittest/**/test_*
 unittest/**/*_test

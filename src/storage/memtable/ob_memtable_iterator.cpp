@@ -173,7 +173,7 @@ int ObMemtableScanIterator::init(
   if (is_inited_) {
     reset();
   }
-
+  // (Maybe)
   if (NULL == (row_.row_val_.cells_ = (ObObj*)context.allocator_->alloc(sizeof(ObObj) * param.out_cols_->count()))) {
     TRANS_LOG(WARN, "arena alloc cells fail", "size", sizeof(ObObj) * param.out_cols_->count());
     ret = OB_ALLOCATE_MEMORY_FAILED;
@@ -485,6 +485,7 @@ int ObMemtableMGetIterator::init(const storage::ObTableIterParam& param, storage
     TRANS_LOG(WARN, "table and query_range can not be null", KP(table), KP(query_range), K(ret));
   } else if (OB_FAIL(param.get_out_cols(context.use_fuse_row_cache_, out_cols))) {
     TRANS_LOG(WARN, "fail to get out cols", K(ret));
+    // (Maybe) obj is not necessary.
   } else if (NULL ==
              (cur_row_.row_val_.cells_ = (ObObj*)context.allocator_->alloc(sizeof(ObObj) * out_cols->count()))) {
     ret = OB_ALLOCATE_MEMORY_FAILED;

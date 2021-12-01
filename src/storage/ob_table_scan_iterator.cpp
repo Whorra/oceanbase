@@ -123,6 +123,9 @@ void ObTableScanStoreRowIterator::reset()
 
 void ObTableScanStoreRowIterator::reuse_row_iters()
 {
+// #define USING_LOG_PREFIX COMMON
+//   LOG_INFO("[my_debug] ObTableScanStoreRowIterator::reuse_row_iters run");
+  
   if (NULL != single_merge_) {
     single_merge_->reuse();
   }
@@ -130,7 +133,9 @@ void ObTableScanStoreRowIterator::reuse_row_iters()
     get_merge_->reuse();
   }
   if (NULL != scan_merge_) {
-    scan_merge_->reuse();
+    if (do_my_rescan_) scan_merge_->my_reuse();
+    else scan_merge_->reuse();
+    do_my_rescan_ = false;
   }
   if (NULL != multi_scan_merge_) {
     multi_scan_merge_->reuse();
@@ -210,7 +215,11 @@ int ObTableScanStoreRowIterator::init_scan_iter(const bool index_back, ObMultipl
 
 int ObTableScanStoreRowIterator::rescan(const ObRangeArray& key_ranges, const ObPosArray& range_array_pos)
 {
+// #define USING_LOG_PREFIX COMMON
+//   LOG_INFO("[my_debug] ObTableScanStoreRowIterator::rescan run");
+  
   int ret = OB_SUCCESS;
+  bool flag = do_my_rescan_;
   if (OB_UNLIKELY(!is_inited_)) {
     ret = OB_NOT_INIT;
     STORAGE_LOG(WARN, "The ObTableScanStoreRowIterator has not been inited, ", K(ret));
@@ -233,6 +242,8 @@ int ObTableScanStoreRowIterator::rescan(const ObRangeArray& key_ranges, const Ob
     } else if (OB_FAIL(prepare_table_context(row_filter_))) {
       STORAGE_LOG(WARN, "fail to prepare table context", K(ret));
     } else {
+      // (TODO): fix this open
+      if (flag) this->do_my_rescan_ = true;
       if (OB_FAIL(open_iter())) {
         STORAGE_LOG(WARN, "fail to open iter", K(ret));
       } else {
@@ -408,11 +419,13 @@ int ObTableScanStoreRowIterator::open_iter()
               }
             }
           } else {
+            if (do_my_rescan_) scan_merge_->do_my_reuse_for_open_iter_ = true;
             if (OB_FAIL(scan_merge_->open(*batch.range_))) {
               STORAGE_LOG(WARN, "Fail to open multiple scan merge iterator, ", K(ret), K(*scan_param_));
             } else {
               main_iter_ = scan_merge_;
             }
+            do_my_rescan_ = false;
           }
         }
         break;
@@ -727,6 +740,7 @@ int ObTableScanIterIterator::rescan(ObTableScanParam& scan_param)
 {
   int ret = OB_SUCCESS;
   range_row_iter_.reset();
+  if (do_my_rescan_) store_row_iter_.do_my_rescan_ = true;
   if (OB_FAIL(store_row_iter_.rescan(scan_param.key_ranges_, scan_param.range_array_pos_))) {
     STORAGE_LOG(WARN, "fail to rescan", K(ret));
   } else if (OB_FAIL(range_row_iter_.init(scan_param.scan_flag_.is_reverse_scan(), store_row_iter_))) {
@@ -737,6 +751,7 @@ int ObTableScanIterIterator::rescan(ObTableScanParam& scan_param)
     range_array_cnt_ = 0 == range_array_cnt ? 1 : range_array_cnt;  // zero range means whole range
     range_array_cursor_ = is_reverse_scan_ ? range_array_cnt_ : -1;
   }
+  do_my_rescan_ = false;
   return ret;
 }
 
@@ -816,7 +831,10 @@ int ObTableScanIterator::init(transaction::ObTransService& trans_service, const 
 int ObTableScanIterator::rescan(ObTableScanParam& scan_param)
 {
   row_iter_ = NULL;
-  return iter_.rescan(scan_param);
+  if (do_my_rescan_) iter_.do_my_rescan_ = true;
+  int ret = iter_.rescan(scan_param);
+  do_my_rescan_ = false;
+  return ret;
 }
 
 void ObTableScanIterator::reset()

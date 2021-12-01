@@ -339,7 +339,7 @@ public:
   virtual ~ObSSTableRowIterator();
   virtual void reset() override;
   virtual void reuse() override;
-  // virtual void my_reuse() override;
+
   virtual int get_skip_range_ctx(
       ObSSTableReadHandle& read_handle, const int64_t cur_micro_idx, ObSSTableSkipRangeCtx*& skip_ctx);
   int get_row_iter_flag_impl(uint8_t& flag);
