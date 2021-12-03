@@ -27,7 +27,7 @@ ObIndexMerge::ObIndexMerge()
       index_param_(NULL),
       access_ctx_(NULL),
       table_iter_(),
-      single_merge_iter_(),
+      // single_merge_iter_(),
       rowkeys_(),
       rowkey_allocator_(ObModIds::OB_SSTABLE_GET_SCAN),
       rowkey_range_idx_(),
@@ -46,7 +46,7 @@ void ObIndexMerge::reset()
   index_param_ = NULL;
   access_ctx_ = NULL;
   table_iter_.reset();
-  single_merge_iter_.reset();
+  // single_merge_iter_.reset();
   rowkeys_.reset();
   rowkey_allocator_.reset();
   rowkey_range_idx_.reset();
@@ -56,7 +56,7 @@ void ObIndexMerge::reset()
 void ObIndexMerge::reuse()
 {
   table_iter_.reuse();
-  single_merge_iter_.reuse();
+  // single_merge_iter_.reuse();
   index_range_array_cursor_ = 0;
 }
 
@@ -74,8 +74,6 @@ int ObIndexMerge::init(const ObTableAccessParam& param, const ObTableAccessParam
   int ret = OB_SUCCESS;
   if (OB_FAIL(table_iter_.init(param, context, get_table_param))) {
     STORAGE_LOG(WARN, "Fail to init table iter, ", K(ret));
-  } if (OB_FAIL(single_merge_iter_.init(param, context, get_table_param))) {
-    STORAGE_LOG(WARN, "Fail to init single merge iter, ", K(ret));
   } else {
     index_param_ = &index_param;
     access_ctx_ = &context;
@@ -113,7 +111,6 @@ int ObIndexMerge::get_next_row(ObStoreRow*& row)
           rowkeys_.reuse();
           rowkey_allocator_.reuse();
           table_iter_.reuse();
-          single_merge_iter_.reuse();
           access_ctx_->allocator_->reuse();
           for (int64_t i = 0; OB_SUCC(ret) && i < MAX_NUM_PER_BATCH; ++i) {
             if (OB_FAIL(index_iter_->get_next_row(index_row))) {
@@ -145,18 +142,10 @@ int ObIndexMerge::get_next_row(ObStoreRow*& row)
           }
 
           if (OB_SUCC(ret)) {
-            if (rowkeys_.count() > 1) {
-              if (OB_FAIL(table_iter_.open(rowkeys_))) {
-                STORAGE_LOG(WARN, "fail to open iterator", K(ret));
-              } else {
-                main_iter_ = &table_iter_;
-              }
+            if (OB_FAIL(table_iter_.open(rowkeys_))) {
+              STORAGE_LOG(WARN, "fail to open iterator", K(ret));
             } else {
-              if (OB_FAIL(single_merge_iter_.open(rowkeys_.at(0)))) {
-                STORAGE_LOG(WARN, "fail to open iterator", K(ret));
-              } else {
-                main_iter_ = &table_iter_;
-              }
+              main_iter_ = &table_iter_;
             }
           }
         }

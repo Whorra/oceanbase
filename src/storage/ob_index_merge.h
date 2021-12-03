@@ -16,7 +16,7 @@
 #include "lib/allocator/ob_allocator.h"
 #include "common/row/ob_row_store.h"
 #include "storage/ob_i_store.h"
-#include "storage/ob_single_merge.h"
+// #include "storage/ob_single_merge.h"
 #include "storage/ob_multiple_get_merge.h"
 #include "storage/ob_query_iterator_util.h"
 #include "storage/blocksstable/ob_block_sstable_struct.h"
@@ -47,7 +47,7 @@ private:
   const ObTableAccessParam* index_param_;
   ObTableAccessContext* access_ctx_;
   ObMultipleGetMerge table_iter_;
-  ObSingleMerge single_merge_iter_;
+  // ObSingleMerge single_merge_iter_;
   GetRowkeyArray rowkeys_;
   common::ObArenaAllocator rowkey_allocator_;
   ObArray<int64_t> rowkey_range_idx_;
