@@ -45,9 +45,27 @@ public:
   {
     int ret = common::OB_SUCCESS;
     void* buf = NULL;
-    if (OB_UNLIKELY(is_inited_)) {
-      ret = common::OB_INIT_TWICE;
-      STORAGE_LOG(WARN, "handle mgr is inited twice", K(ret));
+    // (shk_2):
+    if (OB_LIKELY(is_inited_)) {
+      // ret = common::OB_INIT_TWICE;
+      // STORAGE_LOG(WARN, "handle mgr is inited twice", K(ret));
+      if (is_multi && is_ordered && !last_handle_new_) {
+        if (OB_ISNULL(buf = allocator.alloc(sizeof(Handle)))) {
+          ret = common::OB_ALLOCATE_MEMORY_FAILED;
+          STORAGE_LOG(WARN, "failed to allocate last handle");
+        } else {
+          last_handle_ = new (buf) Handle();
+          last_handle_new_ = true;
+        }
+      } else if (is_multi && !is_ordered && !handle_cache_new_) {
+        if (OB_ISNULL(buf = allocator.alloc(sizeof(HandleCache)))) {
+          ret = common::OB_ALLOCATE_MEMORY_FAILED;
+          STORAGE_LOG(WARN, "failed to allocate last handle");
+        } else {
+          handle_cache_ = new (buf) HandleCache();
+          handle_cache_new_ = true;
+        }
+      }
     } else if (is_multi) {
       if (is_ordered) {
         if (OB_ISNULL(buf = allocator.alloc(sizeof(Handle)))) {
@@ -55,6 +73,7 @@ public:
           STORAGE_LOG(WARN, "failed to allocate last handle");
         } else {
           last_handle_ = new (buf) Handle();
+          last_handle_new_ = true;
         }
       } else {
         if (OB_ISNULL(buf = allocator.alloc(sizeof(HandleCache)))) {
@@ -62,6 +81,7 @@ public:
           STORAGE_LOG(WARN, "failed to allocate last handle");
         } else {
           handle_cache_ = new (buf) HandleCache();
+          handle_cache_new_ = true;
         }
       }
     }
@@ -84,7 +104,9 @@ protected:
   bool is_multi_;
   bool is_ordered_;
   Handle* last_handle_;
+  bool last_handle_new_ = false;
   HandleCache* handle_cache_;
+  bool handle_cache_new_ = false;
 };
 
 }  // namespace storage

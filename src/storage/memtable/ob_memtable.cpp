@@ -1034,7 +1034,8 @@ int ObMemtable::get(const storage::ObTableIterParam& param, storage::ObTableAcce
     TRANS_LOG(WARN, "invalid argument, ", K(ret), K(param), K(context));
   } else if (OB_FAIL(context.store_ctx_->mem_ctx_->get_trans_status())) {
     TRANS_LOG(WARN, "trans already end", K(ret));
-  } else if (NULL == (get_iter_buffer = context.stmt_allocator_->alloc(sizeof(ObMemtableGetIterator))) ||
+    // (shk_2):
+  } else if (NULL == (get_iter_buffer = context.allocator_->alloc(sizeof(ObMemtableGetIterator))) ||
              NULL == (get_iter_ptr = new (get_iter_buffer) ObMemtableGetIterator())) {
     TRANS_LOG(WARN, "construct ObMemtableGetIterator fail");
     ret = OB_ALLOCATE_MEMORY_FAILED;
@@ -1163,7 +1164,7 @@ int ObMemtable::multi_get(const storage::ObTableIterParam& param, storage::ObTab
     TRANS_LOG(WARN, "invalid argument, ", K(ret), K(param), K(context), K(rowkeys));
   } else if (OB_FAIL(context.store_ctx_->mem_ctx_->get_trans_status())) {
     TRANS_LOG(WARN, "trans already end", K(ret));
-  } else if (NULL == (mget_iter_buffer = context.stmt_allocator_->alloc(sizeof(ObMemtableMGetIterator))) ||
+  } else if (NULL == (mget_iter_buffer = context.allocator_->alloc(sizeof(ObMemtableMGetIterator))) ||
              NULL == (mget_iter_ptr = new (mget_iter_buffer) ObMemtableMGetIterator())) {
     TRANS_LOG(WARN,
         "construct ObMemtableMGetIterator fail",

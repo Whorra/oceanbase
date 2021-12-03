@@ -674,8 +674,8 @@ void ObSSTableRowIterator::reuse()
   cur_range_idx_ = -1;
   io_micro_infos_.reuse();
   micro_info_iter_.reuse();
-  block_index_handle_mgr_.reset();
-  block_handle_mgr_.reset();
+  // block_index_handle_mgr_.reset();
+  // block_handle_mgr_.reset();
   table_store_stat_.reuse();
   skip_ctx_.reset();
   storage_file_ = nullptr;
@@ -1711,9 +1711,10 @@ int ObSSTableRowIterator::init_handle_mgr(
             range_count >= USE_HANDLE_CACHE_RANGE_COUNT_THRESHOLD);
   }
   if (OB_SUCC(ret)) {
-    if (OB_FAIL(block_handle_mgr_.init(is_multi, true, *access_ctx.allocator_))) {
+    // (shk_2): make block_handle_mgr_ & block_index_handle_mgr_ available during stmt.
+    if (OB_FAIL(block_handle_mgr_.init(is_multi, true, *access_ctx.stmt_allocator_))) {
       STORAGE_LOG(WARN, "failed to init block handle mgr", K(ret), K(is_multi), K(is_ordered));
-    } else if (OB_FAIL(block_index_handle_mgr_.init(is_multi, is_ordered, *access_ctx.allocator_))) {
+    } else if (OB_FAIL(block_index_handle_mgr_.init(is_multi, is_ordered, *access_ctx.stmt_allocator_))) {
       STORAGE_LOG(WARN, "failed to init block index handle mgr", K(ret), K(is_multi), K(is_ordered));
     }
   }
