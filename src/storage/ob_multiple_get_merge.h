@@ -62,6 +62,7 @@ public:
   virtual void reuse() override;
   virtual int is_range_valid() const override;
 
+  bool do_my_reuse_for_right_table_get_merge_ = false;
 protected:
   virtual int prepare() override;
   virtual int calc_scan_range() override;

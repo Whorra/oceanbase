@@ -40,14 +40,14 @@ public:
   int switch_iterator(const int64_t range_array_idx);
   virtual int release_table_ref();
 private:
-  static const int64_t MAX_NUM_PER_BATCH = 1000;
+  static const int64_t MAX_NUM_PER_BATCH = 1;
   ObQueryRowIterator* index_iter_;
   ObQueryRowIterator* main_iter_;
   int64_t rowkey_cnt_;
   const ObTableAccessParam* index_param_;
   ObTableAccessContext* access_ctx_;
   ObMultipleGetMerge table_iter_;
-  // ObSingleMerge single_merge_iter_;
+  // ObSingleMerge table_iter_;
   GetRowkeyArray rowkeys_;
   common::ObArenaAllocator rowkey_allocator_;
   ObArray<int64_t> rowkey_range_idx_;

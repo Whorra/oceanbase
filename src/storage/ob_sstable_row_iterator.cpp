@@ -1699,7 +1699,7 @@ int ObSSTableRowIterator::init_handle_mgr(
   } else if (0 >= range_count) {
     ret = OB_ERR_UNEXPECTED;
     STORAGE_LOG(WARN, "range count should be greater than 0", K(ret), K(range_count));
-  } else if (1 == range_count) {
+  } else if (0 && 1 == range_count) {
     is_multi = false;
     is_ordered = false;
   } else {

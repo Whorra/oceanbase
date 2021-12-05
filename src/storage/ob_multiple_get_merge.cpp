@@ -46,7 +46,9 @@ int ObMultipleGetMerge::open(const common::ObIArray<common::ObExtStoreRowkey>& r
   if (OB_UNLIKELY(rowkeys.count() <= 0)) {
     ret = OB_INVALID_ARGUMENT;
     STORAGE_LOG(WARN, "Invalid argument, ", K(ret));
-  } else if (OB_FAIL(ObMultipleMerge::open())) {
+  } else if (OB_FAIL(do_my_reuse_for_right_table_get_merge_ ? 
+                        ObMultipleMerge::my_open() :
+                        ObMultipleMerge::open())) {
     STORAGE_LOG(WARN, "Fail to open ObMultipleMerge, ", K(ret));
   } else if (OB_FAIL(to_collation_free_rowkey_on_demand(rowkeys, *access_ctx_->allocator_))) {
     STORAGE_LOG(WARN, "fail to get collation free rowkeys", K(ret));
@@ -83,6 +85,7 @@ void ObMultipleGetMerge::reset_with_fuse_row_cache()
   }
   prefetch_cnt_ = 0;
   reuse_iter_array();
+  // reset_iter_array();
 }
 
 void ObMultipleGetMerge::reset()

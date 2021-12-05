@@ -41,7 +41,7 @@ private:
 
 inline bool is_diagnose_info_enabled()
 {
-  return ObLibConfig::get_instance().is_diagnose_info_enabled();
+  return 0 && ObLibConfig::get_instance().is_diagnose_info_enabled();
 }
 
 inline int reload_diagnose_info_config(const bool enable_diagnose_info)
@@ -53,7 +53,7 @@ inline int reload_diagnose_info_config(const bool enable_diagnose_info)
 
 inline bool is_trace_log_enabled()
 {
-  return ObLibConfig::get_instance().is_trace_log_enabled();
+  return 0 && ObLibConfig::get_instance().is_trace_log_enabled();
 }
 
 inline int reload_trace_log_config(const bool enable_trace_log)

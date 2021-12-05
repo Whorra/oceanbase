@@ -142,11 +142,13 @@ int ObIndexMerge::get_next_row(ObStoreRow*& row)
           }
 
           if (OB_SUCC(ret)) {
+            table_iter_.do_my_reuse_for_right_table_get_merge_ = true;
             if (OB_FAIL(table_iter_.open(rowkeys_))) {
               STORAGE_LOG(WARN, "fail to open iterator", K(ret));
             } else {
               main_iter_ = &table_iter_;
             }
+            table_iter_.do_my_reuse_for_right_table_get_merge_ = false;
           }
         }
       }

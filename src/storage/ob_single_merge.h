@@ -29,6 +29,7 @@ public:
   static int estimate_row_count(const common::ObQueryFlag query_flag, const uint64_t table_id,
       const common::ObExtStoreRowkey& rowkey, const common::ObIArray<ObITable*>& stores, ObPartitionEst& part_estimate);
 
+  // bool do_my_reuse_for_right_table_get_merge_ = false;
 protected:
   virtual int calc_scan_range() override;
   virtual int construct_iters() override;
