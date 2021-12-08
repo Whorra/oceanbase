@@ -627,6 +627,7 @@ int ObMultipleGetMerge::inner_get_next_row_with_fuse_row_cache(ObStoreRow& row)
         }
       } else if (ObMultiGetRowState::IN_SSTABLE == row_info.state_ &&
                  end_memtable_idx_ > 0 /*have non-empty sstable*/) {
+        // (shk_learn): 结果保存在 prow 中
         const ObStoreRow* prow = nullptr;
         STORAGE_LOG(DEBUG, "row in sstable", K(sstable_begin_iter_idx_), K(iters_.count()));
         for (int64_t i = sstable_begin_iter_idx_; OB_SUCC(ret) && i < iters_.count(); ++i) {

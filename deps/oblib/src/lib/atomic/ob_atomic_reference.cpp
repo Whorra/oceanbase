@@ -90,20 +90,15 @@ int ObAtomicReference::check_and_inc_ref_cnt()
   int ret = OB_SUCCESS;
   AtomicInt64 atomic_old = {0};
   AtomicInt64 atomic_new = {0};
-  while (OB_SUCC(ret)) {
-    atomic_old.atomic = ATOMIC_LOAD(&atomic_num_.atomic);
-    atomic_new.atomic = atomic_old.atomic;
-    atomic_new.ref += 1;
+  atomic_old.atomic = ATOMIC_LOAD(&atomic_num_.atomic);
+  atomic_new.atomic = atomic_old.atomic;
+  atomic_new.ref += 1;
 
-    if (OB_UNLIKELY(0 == atomic_new.ref)) {
-      ret = OB_INTEGER_PRECISION_OVERFLOW;
-      COMMON_LOG(WARN, "The reference count is overflow, ", K(ret));
-    } else if (OB_UNLIKELY(0 == atomic_old.ref)) {
-      ret = OB_EAGAIN;
-      // normal case, do not print log
-    } else if (ATOMIC_BCAS(&(atomic_num_.atomic), atomic_old.atomic, atomic_new.atomic)) {
-      break;
-    }
+  if (OB_UNLIKELY(0 == atomic_old.ref)) {
+    ret = OB_EAGAIN;
+    // normal case, do not print log
+  } else {
+    ATOMIC_FAA(&(atomic_num_.atomic), atomic_new.atomic - atomic_old.atomic);
   }
   return ret;
 }

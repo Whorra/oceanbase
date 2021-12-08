@@ -601,8 +601,9 @@ void ObSSTableRowIterator::reset()
     micro_getter_ = NULL;
   }
   if (NULL != micro_scanner_) {
-    micro_scanner_->~ObIMicroBlockRowScanner();
-    micro_scanner_ = NULL;
+    // micro_scanner_->~ObIMicroBlockRowScanner();
+    // micro_scanner_ = NULL;
+    micro_scanner_->reset();
   }
   if (NULL != micro_lock_checker_) {
     micro_lock_checker_->~ObMicroBlockRowLockChecker();
@@ -648,14 +649,14 @@ void ObSSTableRowIterator::reuse()
   // micro_handles_.reset();
   // sstable_micro_infos_.reset();
 
-  // if (NULL != micro_scanner_) {
-  //   micro_scanner_->rescan();
-  // }
-
   if (NULL != micro_scanner_) {
-    micro_scanner_->~ObIMicroBlockRowScanner();
-    micro_scanner_ = NULL;
+    micro_scanner_->reset();
   }
+
+  // if (NULL != micro_scanner_) {
+  //   micro_scanner_->~ObIMicroBlockRowScanner();
+  //   // micro_scanner_ = NULL;
+  // }
 
   macro_block_iter_.reset();
   query_range_ = NULL;
@@ -1362,6 +1363,9 @@ int ObSSTableRowIterator::get_block_row(ObSSTableReadHandle& read_handle, const 
 
 int ObSSTableRowIterator::scan_row(ObSSTableReadHandle& read_handle, const ObStoreRow*& store_row)
 {
+// #define USING_LOG_PREFIX COMMON
+//   // (shk_learn):
+//   LOG_INFO("shk_index3 read_handle: ", K(read_handle.micro_begin_idx_), K(read_handle.micro_end_idx_));
   int ret = OB_SUCCESS;
   ObSSTableSkipRangeCtx* skip_ctx = NULL;
   if (ObSSTableRowState::NOT_EXIST == read_handle.state_) {
@@ -1376,6 +1380,7 @@ int ObSSTableRowIterator::scan_row(ObSSTableReadHandle& read_handle, const ObSto
     bool is_first_open = false;
     bool is_new_skip_range = false;
     bool need_open_micro = false;
+    // LOG_INFO("shk_index4: ", K(cur_micro_idx_), K(cur_prefetch_micro_pos_));
     if (-1 == cur_micro_idx_ || cur_micro_idx_ < read_handle.micro_begin_idx_) {
       is_first_open = -1 == cur_micro_idx_;
       is_new_skip_range = !is_first_open && cur_micro_idx_ < read_handle.micro_begin_idx_;
@@ -1420,11 +1425,20 @@ int ObSSTableRowIterator::scan_row(ObSSTableReadHandle& read_handle, const ObSto
     }
 
     if (OB_SUCC(ret) && need_open_micro) {
+      // (shk_learn):
+        // LOG_INFO(
+        //     "shk_index5 open micro block read handle",
+        //     K(*read_handle.ext_range_),
+        //     K(read_handle),
+        //     K(cur_micro_idx_),
+        //     K(*skip_ctx));
       if (OB_FAIL(open_cur_micro_block(read_handle, is_new_skip_range))) {
         STORAGE_LOG(WARN, "Fail to open micro block, ", K(ret), K_(cur_micro_idx));
       } else if (NULL != skip_ctx && skip_ctx->micro_idx_ == cur_micro_idx_) {
         skip_ctx->is_micro_reopen_ = true;
       }
+      // (shk_learn):
+      // LOG_INFO("shk_index6 open_cur_micro_block");
     }
     // TODO: fast skip pass filter to first batch row scanner
     while (OB_SUCC(ret)) {
@@ -1438,6 +1452,8 @@ int ObSSTableRowIterator::scan_row(ObSSTableReadHandle& read_handle, const ObSto
             if (OB_FAIL(open_cur_micro_block(read_handle))) {
               STORAGE_LOG(WARN, "Fail to open micro block, ", K(ret), K_(cur_micro_idx), K(read_handle));
             }
+            // (shk_learn):
+      // LOG_INFO("shk_index7 open_cur_micro_block");
           } else {
             cur_micro_idx_ = -1;
             ret = OB_ITER_END;
@@ -1582,20 +1598,30 @@ int ObSSTableRowIterator::open_cur_micro_block(ObSSTableReadHandle& read_handle,
   if (NULL == micro_scanner_) {
     // alloc scanner
     if (!sstable_->is_multi_version_minor_sstable()) {
-      if (NULL == (buf = access_ctx_->allocator_->alloc(sizeof(ObMicroBlockRowScanner)))) {
+      if (NULL == (buf = access_ctx_->stmt_allocator_->alloc(sizeof(ObMicroBlockRowScanner)))) {
         ret = OB_ALLOCATE_MEMORY_FAILED;
         STORAGE_LOG(WARN, "Fail to allocate memory for micro block scanner, ", K(ret));
       } else {
         micro_scanner_ = new (buf) ObMicroBlockRowScanner();
       }
+      // LOG_INFO("****shk_index***** ObMicroBlockRowScanner new");
     } else {
-      if (NULL == (buf = access_ctx_->allocator_->alloc(sizeof(ObMultiVersionMicroBlockRowScanner)))) {
+      if (NULL == (buf = access_ctx_->stmt_allocator_->alloc(sizeof(ObMultiVersionMicroBlockRowScanner)))) {
         ret = OB_ALLOCATE_MEMORY_FAILED;
         STORAGE_LOG(WARN, "Fail to allocate memory for micro block scanner, ", K(ret));
       } else {
         micro_scanner_ = new (buf) ObMultiVersionMicroBlockRowScanner();
       }
+      // LOG_INFO("****shk_index***** ObMultiVersionMicroBlockRowScanner new");
     }
+    if (OB_SUCC(ret)) {
+      if (OB_FAIL(micro_scanner_->init(*iter_param_, *access_ctx_, sstable_))) {
+        STORAGE_LOG(WARN, "Fail to init micro scanner, ", K(ret), K(read_handle));
+      }
+    }
+  }
+
+  if (!micro_scanner_->is_init()) {
     if (OB_SUCC(ret)) {
       if (OB_FAIL(micro_scanner_->init(*iter_param_, *access_ctx_, sstable_))) {
         STORAGE_LOG(WARN, "Fail to init micro scanner, ", K(ret), K(read_handle));
@@ -1617,6 +1643,11 @@ int ObSSTableRowIterator::open_cur_micro_block(ObSSTableReadHandle& read_handle,
             K(ret),
             K(read_handle),
             K(read_handle.ext_range_->get_range()));
+        // LOG_INFO(
+        //     "****shk_index***** success to init micro block scanner",
+        //     K(ret),
+        //     K(read_handle),
+        //     K(read_handle.ext_range_->get_range()));
       }
     }
   }

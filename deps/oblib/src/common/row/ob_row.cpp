@@ -89,7 +89,15 @@ int ObNewRow::deep_copy(const ObNewRow& src, char* buf, int64_t len, int64_t& po
     ret = OB_SIZE_OVERFLOW;
     LOG_WARN("size overflow, ", K(ret), "need", src.get_deep_copy_size() + pos, K(len));
   } else {
-    cells_ = new (buf + pos) ObObj[src.count_];
+    // cells_ = new (buf + pos) ObObj[src.count_];
+    if (src.count_ > 0) {
+    	cells_ = new (buf + pos) ObObj();
+		  for(int i = 1; i < src.count_; ++i) {
+			  memcpy(cells_ + i, cells_, sizeof(ObObj));
+		  }
+  	} else {
+      cells_ = (ObObj*)(buf + pos);
+    }
     pos += src.count_ * sizeof(ObObj);
     count_ = src.count_;
     projector_size_ = 0;

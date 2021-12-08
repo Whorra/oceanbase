@@ -54,7 +54,7 @@ public:
         is_inited_(false)
   {}
   virtual ~ObIMicroBlockRowScanner()
-  {}
+  { is_inited_ = false; }
   virtual int init(const storage::ObTableIterParam& param, storage::ObTableAccessContext& context,
       const storage::ObSSTable* sstable);
   virtual int set_range(const common::ObStoreRange& range);
@@ -66,7 +66,7 @@ public:
   virtual void rescan();
   int alloc_row(ObIAllocator& allocator, const int64_t cell_cnt, storage::ObStoreRow& row);
   virtual int get_cur_micro_row_count(int64_t& row_count) const;
-
+  bool is_init() { return is_inited_; }
 protected:
   virtual int inner_get_next_row(const storage::ObStoreRow*& row) = 0;
   virtual int inner_get_next_rows(const storage::ObStoreRow*& rows, int64_t& count) = 0;

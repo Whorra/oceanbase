@@ -123,6 +123,12 @@ int ObIndexMerge::get_next_row(ObStoreRow*& row)
                 STORAGE_LOG(WARN, "Fail to get next row from index iter, ", K(ret));
               }
             } else {
+              // (shk_learn):
+// #define USING_LOG_PREFIX COMMON
+//               int32_t tmp = 0, tmp1 = 0;
+//               index_row->row_val_.get_cell(0).get_int32(tmp);
+//               index_row->row_val_.get_cell(1).get_int32(tmp1);
+//               LOG_INFO("[shk] shk_index row val: ", K(index_row->row_val_.get_count()), K(tmp), K(tmp1));
               src_key.assign(index_row->row_val_.cells_, rowkey_cnt_);
               if (OB_FAIL(src_key.deep_copy(dest_key.get_store_rowkey(), rowkey_allocator_))) {
                 STORAGE_LOG(WARN, "Fail to deep copy rowkey, ", K(ret));

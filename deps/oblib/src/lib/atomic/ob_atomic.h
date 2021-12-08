@@ -56,55 +56,55 @@ namespace common {
 #define ATOMIC_FAAx(val, addv, id)       \
   ({                                     \
     UNUSED(id);                          \
-    OB_ATOMIC_EVENT(atomic_faa);         \
+    /*OB_ATOMIC_EVENT(atomic_faa);*/         \
     __sync_fetch_and_add((val), (addv)); \
   })
 #define ATOMIC_AAFx(val, addv, id)       \
   ({                                     \
     UNUSED(id);                          \
-    OB_ATOMIC_EVENT(atomic_aaf);         \
+    /*OB_ATOMIC_EVENT(atomic_aaf);*/         \
     __sync_add_and_fetch((val), (addv)); \
   })
 #define ATOMIC_FASx(val, subv, id)       \
   ({                                     \
     UNUSED(id);                          \
-    OB_ATOMIC_EVENT(atomic_fas);         \
+    /*OB_ATOMIC_EVENT(atomic_fas);*/         \
     __sync_fetch_and_sub((val), (subv)); \
   })
 #define ATOMIC_SAFx(val, subv, id)       \
   ({                                     \
     UNUSED(id);                          \
-    OB_ATOMIC_EVENT(atomic_saf);         \
+    /*OB_ATOMIC_EVENT(atomic_saf);*/         \
     __sync_sub_and_fetch((val), (subv)); \
   })
 #define ATOMIC_TASx(val, newv, id)                        \
   ({                                                      \
     UNUSED(id);                                           \
-    OB_ATOMIC_EVENT(atomic_tas);                          \
+    /*OB_ATOMIC_EVENT(atomic_tas);*/                          \
     __atomic_exchange_n((val), (newv), __ATOMIC_SEQ_CST); \
   })
 #define ATOMIC_SETx(val, newv, id)                        \
   ({                                                      \
     UNUSED(id);                                           \
-    OB_ATOMIC_EVENT(atomic_set);                          \
+    /*OB_ATOMIC_EVENT(atomic_set);*/                          \
     __atomic_exchange_n((val), (newv), __ATOMIC_SEQ_CST); \
   })
 #define ATOMIC_VCASx(val, cmpv, newv, id)               \
   ({                                                    \
     UNUSED(id);                                         \
-    OB_ATOMIC_EVENT(atomic_vcas);                       \
+    /*OB_ATOMIC_EVENT(atomic_vcas);*/                       \
     __sync_val_compare_and_swap((val), (cmpv), (newv)); \
   })
 #define ATOMIC_BCASx(val, cmpv, newv, id)                \
   ({                                                     \
     UNUSED(id);                                          \
-    OB_ATOMIC_EVENT(atomic_bcas);                        \
+    /*OB_ATOMIC_EVENT(atomic_bcas);*/                        \
     __sync_bool_compare_and_swap((val), (cmpv), (newv)); \
   })
 #define ATOMIC_ANDFx(val, andv, id)      \
   ({                                     \
     UNUSED(id);                          \
-    OB_ATOMIC_EVENT(atomic_Aaf);         \
+    /*OB_ATOMIC_EVENT(atomic_Aaf);*/         \
     __sync_and_and_fetch((val), (andv)); \
   })
 
