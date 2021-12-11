@@ -12,6 +12,7 @@
 
 #define USING_LOG_PREFIX SQL_ENG
 
+#include <mutex>
 #include "ob_table_scan_op.h"
 #include "ob_table_scan.h"
 #include "sql/engine/ob_exec_context.h"
@@ -20,6 +21,7 @@
 #include "storage/ob_table_scan_iterator.h"
 #include "observer/ob_server_struct.h"
 #include "observer/ob_server.h"
+#include "storage/ob_multiple_cache.h"
 
 namespace oceanbase {
 using namespace common;
@@ -864,7 +866,7 @@ int ObTableScanOp::inner_open()
     }
   }
   cur_trace_id_ = ObCurTraceId::get();
-
+  scan_count_ = 0;
   return ret;
 }
 
@@ -1328,15 +1330,51 @@ int ObTableScanOp::group_rescan()
   return ret;
 }
 
+extern std::unordered_map<uint64_t, std::unordered_map<int32_t, ObNewRow*>> table_rows_cache;
 int ObTableScanOp::get_next_row_with_mode()
 {
   int ret = OB_SUCCESS;
-  if (MY_SPEC.is_vt_mapping_) {
-    // switch to mysql mode
-    CompatModeGuard g(ObWorker::CompatMode::MYSQL);
-    ret = result_->get_next_row();
-  } else {
-    ret = result_->get_next_row();
+  int find = 0;
+  uint64_t table_id = scan_param_.table_param_->get_table_id();
+  if (storage::table_rows_cache.find(table_id) != storage::table_rows_cache.end()) {
+    if (scan_param_.key_ranges_.count() == 1) {
+      if (scan_param_.key_ranges_.at(0).start_key_.get_obj_ptr()->get_type() == ObInt32Type) {
+        if (scan_param_.key_ranges_.at(0).start_key_.get_obj_ptr()->get_int32()
+            == scan_param_.key_ranges_.at(0).end_key_.get_obj_ptr()->get_int32()) {
+          if (!scan_param_.key_ranges_.at(0).border_flag_.inclusive_start()
+              && !scan_param_.key_ranges_.at(0).border_flag_.inclusive_end()) {
+             return OB_ITER_END;
+          }
+          int32_t store_key = scan_param_.key_ranges_.at(0).start_key_.get_obj_ptr()->get_int32();
+          if (storage::table_rows_cache[table_id].find(store_key) != storage::table_rows_cache[table_id].end()) {
+            if (scan_param_.key_ranges_.at(0).border_flag_.inclusive_start()
+                && scan_param_.key_ranges_.at(0).border_flag_.inclusive_end()) {
+              if (scan_count_ == 1) {
+                scan_count_ = 0;
+                return OB_ITER_END;
+              } else {
+                scan_count_++;
+              }
+            }
+            STORAGE_LOG(WARN, "[lx] get from table_rows_cache", K(table_id), K(store_key));
+            find = 1;
+            ObNewRow* row = storage::table_rows_cache[table_id][store_key];
+            int16_t* nop_pos = NULL;
+            int64_t nop_cnt = 0;
+            row2exprs_projector_.project(*scan_param_.output_exprs_, row->cells_, nop_pos, nop_cnt);
+          }
+        }
+      }
+    }
+  }
+  if (find == 0) {
+    if (MY_SPEC.is_vt_mapping_) {
+      // switch to mysql mode
+      CompatModeGuard g(ObWorker::CompatMode::MYSQL);
+      ret = result_->get_next_row();
+    } else {
+      ret = result_->get_next_row();
+    }
   }
   return ret;
 }

@@ -12,6 +12,7 @@
 
 #define USING_LOG_PREFIX STORAGE
 
+#include <mutex>
 #include "lib/stat/ob_diagnose_info.h"
 #include "common/sql_mode/ob_sql_mode_utils.h"
 #include "common/object/ob_obj_compare.h"
@@ -24,13 +25,16 @@
 #include "share/ob_worker.h"
 #include "sql/engine/ob_phy_operator.h"
 #include "sql/engine/ob_operator.h"
+#include "ob_multiple_cache.h"
+
 
 namespace oceanbase {
 using namespace common;
 namespace storage {
 
 ObMultipleMerge::ObMultipleMerge()
-    : padding_allocator_(ObModIds::OB_SSTABLE_GET_SCAN),
+    : rowkeys_(NULL),
+      padding_allocator_(ObModIds::OB_SSTABLE_GET_SCAN),
       iters_(),
       access_param_(NULL),
       access_ctx_(NULL),
@@ -330,6 +334,9 @@ int ObMultipleMerge::project2output_exprs(ObStoreRow& unprojected_row, ObStoreRo
   return ret;
 }
 
+std::unordered_map<uint64_t, std::unordered_map<int32_t, ObNewRow*>> table_rows_cache;
+static std::mutex _mu_;
+
 int ObMultipleMerge::get_next_row(ObStoreRow*& row)
 {
   int ret = OB_SUCCESS;
@@ -446,6 +453,39 @@ int ObMultipleMerge::get_next_row(ObStoreRow*& row)
         }
       }
 
+      if (nullptr == rowkeys_) {
+      } else if (OB_SUCCESS == ret && rowkeys_->count() == 1) {
+        const ObExtStoreRowkey &tmp_key = rowkeys_->at(0);
+        const uint64_t table_id = access_param_->iter_param_.table_id_;
+        if (tmp_key.get_store_rowkey().get_obj_ptr()->get_type() == ObInt32Type) {
+          int32_t store_key = tmp_key.get_store_rowkey().get_obj_ptr()->get_int32();
+          if (table_rows_cache.find(table_id) == table_rows_cache.end()
+              || table_rows_cache[table_id].size() <= 200000) {
+            _mu_.lock();
+            if (table_rows_cache[table_id].find(store_key) == table_rows_cache[table_id].end()) {
+              STORAGE_LOG(WARN, "[lx]", K(table_rows_cache[table_id].size()), K(table_id), K(store_key));
+              const ObNewRow &new_row = unprojected_row_.row_val_;
+              const int64_t buf_len = sizeof(ObNewRow) + new_row.get_deep_copy_size();
+              int64_t pos = sizeof(ObNewRow);
+              char* buf = NULL;
+              ObNewRow* tmp_new_row = NULL;
+
+              if (OB_ISNULL(buf = static_cast<char*>(malloc(buf_len)))) {
+                ret = OB_ALLOCATE_MEMORY_FAILED;
+                TRANS_LOG(WARN, "alloc new row failed", K(ret), K(buf_len));
+              } else if (OB_ISNULL(tmp_new_row = new (buf) ObNewRow())) {
+                ret = OB_ERR_UNEXPECTED;
+                TRANS_LOG(WARN, "new_row is null", K(ret), K(buf_len));
+              } else if (OB_FAIL(tmp_new_row->deep_copy(new_row, buf, buf_len, pos))) {
+                TRANS_LOG(WARN, "deep copy row failed", K(ret), K(buf_len), K(pos));
+              }
+              table_rows_cache[table_id][store_key] = tmp_new_row;
+            }
+            _mu_.unlock();
+          }
+        }
+      }
+
       // check row
       if (OB_SUCC(ret) && nullptr != row) {
         bool out = false;
@@ -485,7 +525,7 @@ int ObMultipleMerge::get_next_row(ObStoreRow*& row)
         access_ctx_->table_scan_stat_->row_cache_hit_cnt_ += access_ctx_->access_stat_.row_cache_hit_cnt_;
         access_ctx_->table_scan_stat_->row_cache_miss_cnt_ += access_ctx_->access_stat_.row_cache_miss_cnt_;
       }
-      report_table_store_stat();
+      // report_table_store_stat();
     }
     if (OB_SUCC(ret)) {
       if (NULL != access_ctx_->table_scan_stat_) {

@@ -20,8 +20,7 @@ namespace storage {
 const int64_t ObMultipleGetMerge::MAX_MULTI_GET_FUSE_ROW_CACHE_PUT_COUNT = 50;
 
 ObMultipleGetMerge::ObMultipleGetMerge()
-    : rowkeys_(NULL),
-      cow_rowkeys_(),
+    : cow_rowkeys_(),
       prefetch_range_idx_(0),
       get_row_range_idx_(0),
       prefetch_cnt_(0),

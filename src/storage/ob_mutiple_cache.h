@@ -1,0 +1,8 @@
+//
+// Created by lx on 2021/12/12.
+//
+
+#ifndef OCEANBASE_CE_OB_MUTIPLE_CACHE_H
+#define OCEANBASE_CE_OB_MUTIPLE_CACHE_H
+
+#endif  // OCEANBASE_CE_OB_MUTIPLE_CACHE_H

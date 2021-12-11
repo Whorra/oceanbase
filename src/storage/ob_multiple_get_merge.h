@@ -89,7 +89,8 @@ private:
   static const int64_t MAX_PREFETCH_CNT = 300;
   static const int64_t MAX_MULTI_GET_FUSE_ROW_CACHE_GET_COUNT = 100;
   static const int64_t MAX_MULTI_GET_FUSE_ROW_CACHE_PUT_COUNT;
-  const common::ObIArray<common::ObExtStoreRowkey>* rowkeys_;
+  // [lx] move to ObMultipleMerge
+  // const common::ObIArray<common::ObExtStoreRowkey>* rowkeys_;
   ObArray<common::ObExtStoreRowkey> sstable_rowkeys_;
   GetRowkeyArray cow_rowkeys_;
   int64_t prefetch_range_idx_;

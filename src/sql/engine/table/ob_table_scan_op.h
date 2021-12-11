@@ -327,6 +327,7 @@ private:
   int get_next_row_with_mode();
 
 protected:
+  int scan_count_;
   common::ObNewRowIterator* result_;
   // result iterator of array binding
   common::ObNewIterIterator* ab_iters_;

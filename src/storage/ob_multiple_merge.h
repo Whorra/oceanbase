@@ -20,6 +20,7 @@
 #include "storage/ob_warm_up.h"
 #include "storage/ob_table_store_stat_mgr.h"
 
+
 namespace oceanbase {
 namespace storage {
 class ObIStoreRowFilter;
@@ -140,6 +141,8 @@ private:
   int fill_scale(common::ObNewRow& row);
 
 protected:
+  // [lx] move from ObMultipleGetMerge
+  const common::ObIArray<common::ObExtStoreRowkey>* rowkeys_;
   common::ObArenaAllocator padding_allocator_;
   MergeIterators iters_;
   const ObTableAccessParam* access_param_;
