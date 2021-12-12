@@ -1,4 +1,4 @@
-add_library(ob_base INTERFACE storage/ob_table_cache.h storage/ob_mutiple_cache.h storage/ob_multiple_cache.h)
+add_library(ob_base INTERFACE storage/ob_multiple_cache.h)
 target_include_directories(
   ob_base INTERFACE
   ${CMAKE_CURRENT_SOURCE_DIR})
