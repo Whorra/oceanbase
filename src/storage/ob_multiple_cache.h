@@ -6,10 +6,12 @@
 #define OCEANBASE_CE_OB_MULTIPLE_CACHE_H
 
 #include <unordered_map>
+#include <mutex>
 
 namespace oceanbase {
 namespace storage {
 extern std::unordered_map<uint64_t, std::unordered_map<int32_t, ObNewRow*>> table_rows_cache;
+extern std::mutex _mu_;
   // extern std::unordered_map<uint64_t, std::unordered_map<int, common::ObNewRow*>> table_rows_cache;
 
 }  // end namespace memtable

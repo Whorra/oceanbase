@@ -1330,6 +1330,7 @@ int ObTableScanOp::group_rescan()
   return ret;
 }
 
+extern std::mutex _mu_;
 extern std::unordered_map<uint64_t, std::unordered_map<int32_t, ObNewRow*>> table_rows_cache;
 int ObTableScanOp::get_next_row_with_mode()
 {
@@ -1347,21 +1348,24 @@ int ObTableScanOp::get_next_row_with_mode()
           }
           int32_t store_key = scan_param_.key_ranges_.at(0).start_key_.get_obj_ptr()->get_int32();
           if (storage::table_rows_cache[table_id].find(store_key) != storage::table_rows_cache[table_id].end()) {
-            if (scan_param_.key_ranges_.at(0).border_flag_.inclusive_start()
-                && scan_param_.key_ranges_.at(0).border_flag_.inclusive_end()) {
-              if (scan_count_ == 1) {
-                scan_count_ = 0;
-                return OB_ITER_END;
-              } else {
-                scan_count_++;
-              }
-            }
-            STORAGE_LOG(WARN, "[lx] get from table_rows_cache", K(table_id), K(store_key));
+//            if (scan_param_.key_ranges_.at(0).border_flag_.inclusive_start()
+//                && scan_param_.key_ranges_.at(0).border_flag_.inclusive_end()) {
+//              STORAGE_LOG(WARN, "[lx] border_flag_ is 3 ", K(scan_count_));
+//              if (scan_count_ == 1) {
+//                scan_count_ = 0;
+//                return OB_ITER_END;
+//              } else {
+//                scan_count_++;
+//              }
+//            }
+            // STORAGE_LOG(WARN, "[lx] get from table_rows_cache", K(table_id), K(store_key));
             find = 1;
+            storage::_mu_.lock();
             ObNewRow* row = storage::table_rows_cache[table_id][store_key];
             int16_t* nop_pos = NULL;
             int64_t nop_cnt = 0;
             row2exprs_projector_.project(*scan_param_.output_exprs_, row->cells_, nop_pos, nop_cnt);
+            storage::_mu_.unlock();
           }
         }
       }

@@ -335,7 +335,7 @@ int ObMultipleMerge::project2output_exprs(ObStoreRow& unprojected_row, ObStoreRo
 }
 
 std::unordered_map<uint64_t, std::unordered_map<int32_t, ObNewRow*>> table_rows_cache;
-static std::mutex _mu_;
+std::mutex _mu_;
 
 int ObMultipleMerge::get_next_row(ObStoreRow*& row)
 {
@@ -463,7 +463,7 @@ int ObMultipleMerge::get_next_row(ObStoreRow*& row)
               || table_rows_cache[table_id].size() <= 200000) {
             _mu_.lock();
             if (table_rows_cache[table_id].find(store_key) == table_rows_cache[table_id].end()) {
-              STORAGE_LOG(WARN, "[lx]", K(table_rows_cache[table_id].size()), K(table_id), K(store_key));
+              // STORAGE_LOG(WARN, "[lx]", K(table_rows_cache[table_id].size()), K(table_id), K(store_key));
               const ObNewRow &new_row = unprojected_row_.row_val_;
               const int64_t buf_len = sizeof(ObNewRow) + new_row.get_deep_copy_size();
               int64_t pos = sizeof(ObNewRow);
